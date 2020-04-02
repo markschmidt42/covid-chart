@@ -1,11 +1,7 @@
 <template>
   <div class="hello">
     countries: {{ topDeaths.length }} / {{ historical.length }} (with deaths >=
-    <input
-      v-model="inputs.minDeaths"
-      type="number"
-      class="min-death"
-    /> )
+    <input v-model="inputs.minDeaths" type="number" min="20" class="min-death" /> )
     <span :title="tooltips.scalePopulation">
       Scale to Poulation:
       <select v-model="inputs.scaleToCountryPopulation">
@@ -14,13 +10,15 @@
         <option
           v-for="item in topDeaths"
           :key="item.country"
-          :value="countries.populations[item.country]"
-        >{{ item.country }} ({{ countries.populations[item.country].toLocaleString() }})</option>
+          :value="{ population: countries.populations[item.country], name: item.country }"
+          >{{ item.country }} ({{ countries.populations[item.country].toLocaleString() }})</option
+        >
       </select>
     </span>
     <div id="chart">
       <apexchart type="line" height="650" :options="chartOptions" :series="series"></apexchart>
     </div>
+    TODO: get the height to fill the screen in a smart way
   </div>
 </template>
 
@@ -38,10 +36,11 @@ export default {
     historical: [],
     // todo: set this dyanmically
     lastDateName: '4/1/20',
+    refreshDataEveryMiliseconds: 1000 * 60 * 60 * 2, // every 2 hours
     inputs: {
       minDeaths: 1000,
-      scaleToCountryPopulation: 0,
-      firstDayDeathsOver: 10,
+      scaleToCountryPopulation: '0',
+      firstDayDeathsOver: 100,
     },
     tooltips: {
       scalePopulation:
@@ -57,6 +56,9 @@ export default {
     series: [],
 
     chartOptions: {
+      customData: {
+        test: 100,
+      },
       chart: {
         // height: '100%',
         type: 'line',
@@ -68,16 +70,25 @@ export default {
         enabled: false,
       },
       stroke: {
+        // curve: 'smooth',
         curve: 'straight',
       },
-      // title: {
-      //   text: 'Total Deaths after X Deaths',
-      //   align: 'left',
-      // },
+      title: {
+        text: 'Total Deaths after X Deaths',
+        //   align: 'left',
+      },
       grid: {
         row: {
           colors: ['#f3f3f3', 'transparent'], // takes an array which will be repeated on columns
           opacity: 0.5,
+        },
+      },
+      tooltip: {
+        x: {
+          formatter: (value, obj) => `${value} days after ${obj.w.config.customData.test} deaths`,
+        },
+        y: {
+          formatter: (value) => `${value.toLocaleString()}`,
         },
       },
       // xaxis: {
@@ -100,21 +111,34 @@ export default {
     },
   },
   methods: {
-    getHistoricalData() {
-      if (localStorage.historical) {
+    dataIsExpired() {
+      if (!localStorage.historicalExpired) return true;
+      // console.log('dataIsExpired localStorage.historicalExpired', localStorage.historicalExpired);
+      const dateTimeDataWasPulledLast = Date.parse(localStorage.historicalExpired);
+      // console.log('dataIsExpired dateTimeDataWasPulledLast', dateTimeDataWasPulledLast);
+      const dateTimeNow = Date.parse(new Date());
+      // console.log('dataIsExpired dateTimeNow', dateTimeNow);
+      // console.log('dataIsExpired diff', dateTimeNow - dateTimeDataWasPulledLast);
+      return dateTimeNow - dateTimeDataWasPulledLast > this.refreshDataEveryMiliseconds;
+    },
+    async getHistoricalData() {
+      console.log('getHistoricalData() PRE');
+      if (localStorage.historical && !this.dataIsExpired()) {
         this.raw.historical = JSON.parse(localStorage.historical);
         console.log('grabbed from local');
       } else {
-        axios.get(historicalDataApiUrl).then((r) => {
+        await axios.get(historicalDataApiUrl).then((r) => {
           this.raw.historical = r.data;
           localStorage.historical = JSON.stringify(r.data);
+          localStorage.historicalExpired = new Date();
           console.log('grabbed from api');
         });
       }
-      this.historical = this.cleanUpData(this.raw.historical);
-      console.log(this.historical);
+      console.log('getHistoricalData() POST');
+      // console.log(this.historical);
     },
     cleanUpData(data) {
+      console.log('cleanUpData() PRE');
       // merged = { country: 'abc', deaths: [] }
       const flags = [];
       const merged = [];
@@ -129,6 +153,7 @@ export default {
         }
       }
 
+      console.log('cleanUpData() POST');
       return merged;
     },
     getDeathsByCountry(data, country) {
@@ -168,16 +193,45 @@ export default {
           .sort((a, b) => b.country - a.country)
       );
     },
+    updateLabels() {
+      console.log('updateLabels PRE', this.chartOptions.title.text);
+      let title = `Total Deaths (after having ${this.inputs.firstDayDeathsOver} total deaths in the country)`;
+
+      if (this.inputs.scaleToCountryPopulation !== '0') {
+        if (this.inputs.scaleToCountryPopulation === '1') {
+          // eslint-disable-next-line max-len
+          title = `Deaths per Million (relative to population of the country, after having ${this.inputs.firstDayDeathsOver} total deaths in the country.)`;
+        } else {
+          const country = this.inputs.scaleToCountryPopulation.name;
+          // eslint-disable-next-line operator-linebreak
+          title =
+            // eslint-disable-next-line operator-linebreak
+            `Deaths per country as if the country was the size of ${country} ` +
+            // eslint-disable-next-line operator-linebreak
+            `(this simulates if the spread was the same in each country, but had the population of ${country}. ` +
+            `This might tell you what the ${country} could be facing.)`;
+        }
+      }
+      this.chartOptions = {
+        title: {
+          text: title,
+        },
+      };
+      console.log('updateLabels POST', this.chartOptions.title.text);
+    },
     updateSeries() {
       console.log('updateSeries()');
       clearTimeout(window.timersUpdate);
       window.timersUpdate = setTimeout(() => {
         console.log('updateSeries() IN');
+
+        this.updateLabels();
+
         const rawData = this.getTopDeaths();
         const series = [];
         rawData.forEach((element) => {
           let scaleMultiplier = 1;
-          if (this.inputs.scaleToCountryPopulation > 0) {
+          if (this.inputs.scaleToCountryPopulation !== '0') {
             // if we are showing percent of population
             if (this.inputs.scaleToCountryPopulation === '1') {
               scaleMultiplier = this.countries.populations[element.country];
@@ -187,7 +241,9 @@ export default {
             } else {
               // eslint-disable-next-line operator-linebreak
               scaleMultiplier =
-                this.inputs.scaleToCountryPopulation / this.countries.populations[element.country];
+                // eslint-disable-next-line operator-linebreak
+                this.inputs.scaleToCountryPopulation.population /
+                this.countries.populations[element.country];
             }
           }
 
@@ -217,6 +273,7 @@ export default {
           series.push({
             name: element.country,
             data,
+            color: 'red',
           });
         });
         this.series = series;
@@ -232,6 +289,9 @@ export default {
       //   },
       // ];
     },
+    initValues() {
+      this.lastDateName = this.getLastDate();
+    },
     initInputs() {
       const params = new URLSearchParams(window.location.search);
       if (params.has('deaths') && parseInt(params.get('deaths'), 10)) {
@@ -241,6 +301,18 @@ export default {
         this.inputs.scaleToCountryPopulation = params.get('scale');
       }
     },
+    getLastDate() {
+      // returns '4/1/20'
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1); // get yesterday
+
+      const day = yesterday.getDate();
+      const month = yesterday.getMonth() + 1;
+      const year = String(yesterday.getFullYear()).substr(-2);
+
+      return `${month}/${day}/${year}`;
+    },
   },
   computed: {
     topDeaths() {
@@ -248,9 +320,13 @@ export default {
     },
   },
   created() {
-    this.getHistoricalData();
+    this.initValues();
     this.initInputs();
-    this.updateSeries();
+    this.getHistoricalData().then(() => {
+      this.historical = this.cleanUpData(this.raw.historical);
+
+      this.updateSeries();
+    });
   },
 };
 </script>
