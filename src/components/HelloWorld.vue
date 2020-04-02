@@ -3,7 +3,7 @@
     countries: {{ topDeaths.length }} / {{ historical.length }} (with deaths >=
     <input v-model="inputs.minDeaths" type="number" min="20" class="min-death" /> )
     <span :title="tooltips.scalePopulation">
-      Scale to Poulation:
+      Scale to Population:
       <select v-model="inputs.scaleToCountryPopulation">
         <option value="0">Do not scale by population</option>
         <option value="1">Scale by Deaths per Million (population)</option>
