@@ -51,22 +51,6 @@
         This was built to help predict where we are at in the pandemic (beginning, middle or end).
       </li>
       <li>
-        I was not 100% happy with the typical charts I was seeing:
-        <a
-          href="?mode=deaths&startAfter=100&scale=0&deaths=1000"
-        >HERE (no population scale, timelines starts after deaths >= 100)</a>
-        <br />Or they were like this
-        <a
-          href="?mode=chronological&scale=0&deaths=1000"
-        >HERE (no population scale, timeline chronological)</a>
-      </li>
-      <li>
-        So I built this one
-        <a
-          href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=3000"
-        >HERE (scale to population (deaths per million), timelines starts after deaths per million >= 3)</a>
-      </li>
-      <li>
         This chart uses death data because I feel it is more accurate. Case data is too inconsistent across countries/states.
         Testing is all over the place. So even though death data can be anywhere from 14-21 days LAGGING.
         If we start seeing the rate slow down in deaths, we can be sure we are on the downtrend of cases.
@@ -74,12 +58,32 @@
         Some are dying and not getting tested, some are dying and not even making it to the hospital.
         Reports in Italy say it could be under reported by even double in some villages.
       </li>
-      <li>Many of the charts out there do not take into account population. So this one does that.</li>
+      <li>Many of the charts out there do not take into account population (they just show death or case counts).</li>
       <li>
-        Many of the charts out there start at graphing the data after the first 100 deaths. But again,
+        Many of the charts out there start graphing the data after the first 100 deaths. But again,
         this DOES NOT take into account population so gives a false timeline comparison IMO. USA's first 100 deaths is
-        nothing compared to Luxembourg's first 100 deaths. So instead, this looks at when they hit 3 deaths per million.
-        Puts everyone at the same scale IMO.
+        nothing compared to Luxembourg's first 100 deaths. So instead, this chart looks at when they hit 3 deaths per million.
+        It puts everyone at the same scale IMO.
+      </li>
+      <li>
+        These are some of the typical type of charts that are out there:
+        <a
+          href="?mode=deaths&startAfter=100&scale=0&deaths=1000"
+        >HERE (no population scale, timelines starts after deaths >= 100)</a>
+        <br />Or like this
+        <a
+          href="?mode=chronological&scale=0&deaths=1000"
+        >HERE (no population scale, timeline chronological)</a>
+      </li>
+      <li>
+        But these are the new ones that I built:
+        <a
+          href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=3000"
+        >HERE (scale to population (deaths per million), timelines starts after deaths per million >= 3 and current deaths are >= 3000)</a>
+        <br />Or here is one with a few more countries
+        <a
+          href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=1000"
+        >HERE (scale to population (deaths per million), timelines starts after deaths per million >= 3 and current deaths are >= 1000)</a>
       </li>
       <li>
         I also wanted to be able to say "If it were to spread here (in the USA), at the same rate in does in say Italy or
@@ -94,18 +98,30 @@
         >https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical</a>
       </li>
       <li>
-        Additional Sources: This is a great source of data
+        Additional Sources (charts I check daily): This is a great source of data
         <a
           href="https://www.worldometers.info/coronavirus/"
           target="_blank"
         >https://www.worldometers.info/coronavirus/</a>
       </li>
       <li>
-        Additional Sources: This one is too
+        Additional Sources (charts I check daily): This one is too (great to see the current "doubling rate")
         <a
           href="https://www.nytimes.com/interactive/2020/03/21/upshot/coronavirus-deaths-by-country.html"
           target="_blank"
         >https://www.nytimes.com/interactive/2020/03/21/upshot/coronavirus-deaths-by-country.html</a>
+      </li>
+      <li>
+        TODO: If Chronological, allow user to chose the starting date of the chart (get rid of all
+        of the low China activity at the start)
+      </li>
+      <li>
+        TODO: If not Chronological, when a user mouseovers a data point,
+        the tooltip will show the date that the data point is for (rather than just days after)
+      </li>
+      <li>
+        TODO: Make it way prettier :) I threw this together in like 4-5 hours. It's accurate, but it's ugly,
+        don't view the source code :)
       </li>
     </ul>
   </div>
@@ -508,6 +524,10 @@ h3 {
 ul {
   list-style-type: disc;
   text-align: left;
+}
+
+ul li {
+  margin-bottom: 10px;
 }
 
 a {
