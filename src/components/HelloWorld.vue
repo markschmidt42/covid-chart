@@ -1,12 +1,30 @@
 <template>
   <div class="hello">
-    countries: {{ topDeaths.length }} / {{ historical.length }} (with deaths >=
+    Only show where current total deaths >=
     <input
       v-model="inputs.minDeaths"
       type="number"
       min="20"
-      class="min-death"
-    /> )
+      class="small-number"
+    /> and start showing "day 1" after
+    <input
+      v-if="inputs.firstDayMode === 'deaths'"
+      v-model="inputs.firstDayDeathsOver"
+      type="number"
+      min="1"
+      class="small-number"
+    />
+    <input
+      v-if="inputs.firstDayMode === 'deathsPerMillion'"
+      v-model="inputs.firstDayDeathsPerMillionOver"
+      type="number"
+      min="1"
+      class="small-number"
+    />
+    (
+    <input type="radio" v-model="inputs.firstDayMode" value="deaths" />deaths or
+    <input type="radio" v-model="inputs.firstDayMode" value="deathsPerMillion" />deaths per million )
+    <br />
     <span :title="tooltips.scalePopulation">
       Scale to Population:
       <select v-model="inputs.scaleToCountryPopulation">
@@ -28,7 +46,19 @@
         This was built to help predict where we are at in the pandemic (beginning, middle or end).
       </li>
       <li>
-        This chart uses death data becasue I feel it is more accurate. Case data is too inconsistent across countries/states.
+        I was not 100% happy with the typical charts I was seeing:
+        <a
+          href="?mode=deaths&startAfter=100&scale=0&deaths=1000"
+        >HERE (no population scale, timelines starts after deaths >= 100)</a>
+      </li>
+      <li>
+        So I built this one
+        <a
+          href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=3000"
+        >HERE (scale to population (deaths per million), timelines starts after deaths per million >= 3)</a>
+      </li>
+      <li>
+        This chart uses death data because I feel it is more accurate. Case data is too inconsistent across countries/states.
         Testing is all ove the place. So even though death data can be anywhere from 14-21 days LAGGING.
         If we start seeing the rate slow down in deaths, we can be sure we are on the downtrend of cases.
         However, even though this is way more accurate, there are many reports that even the deaths are under reported.
@@ -44,7 +74,7 @@
       </li>
       <li>
         I also wanted to be able to say "If it were to spread here (in the USA), at the same rate in does in say Italy or
-        Spain or Iran, ... What would the death toll potentially look like?" also "If we were the same as anothe country,
+        Spain or Iran, ... What would the death toll potentially look like?" also "If we were the same as another country,
         are we 'just getting started' or are we 'past the peak', ...?"
       </li>
       <li>TODO: get the height to fill the screen in a smart way</li>
@@ -58,7 +88,13 @@
 import axios from 'axios';
 import populationContants from '@/constants/populations';
 
+// https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical
 const historicalDataApiUrl = 'https://corona.lmao.ninja/v2/historical';
+
+const firstDayModes = {
+  deaths: 'deaths',
+  deathsPerMillion: 'deathsPerMillion',
+};
 
 console.log(populationContants.populations);
 
@@ -66,12 +102,13 @@ export default {
   name: 'HelloWorld',
   data: () => ({
     historical: [],
-    // todo: set this dyanmically
+    // todo: set this dynamically
     lastDateName: '4/1/20',
     refreshDataEveryMiliseconds: 1000 * 60 * 60 * 2, // every 2 hours
     inputs: {
-      minDeaths: 2000,
-      scaleToCountryPopulation: '0',
+      minDeaths: 3000,
+      scaleToCountryPopulation: '1',
+      firstDayMode: firstDayModes.deathsPerMillion,
       firstDayDeathsOver: 100,
       firstDayDeathsPerMillionOver: 3,
     },
@@ -118,7 +155,7 @@ export default {
       },
       tooltip: {
         x: {
-          formatter: (value, obj) => `${value} days after ${obj.w.config.customData.test} deaths`,
+          formatter: (value) => `${value} days after`,
         },
         y: {
           formatter: (value) => `${value.toLocaleString()}`,
@@ -228,12 +265,18 @@ export default {
     },
     updateLabels() {
       console.log('updateLabels PRE', this.chartOptions.title.text);
-      let title = `Total Deaths (after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per million in the country)`;
+
+      let startText = `(after having ${this.inputs.firstDayDeathsOver} deaths)`;
+      if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
+        startText = `(after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per million)`;
+      }
+
+      let title = `Total Deaths ${startText}`;
 
       if (this.inputs.scaleToCountryPopulation !== '0') {
         if (this.inputs.scaleToCountryPopulation === '1') {
           // eslint-disable-next-line max-len
-          title = `Deaths per Million (relative to population of the country, after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per Million in the country.)`;
+          title = `Deaths per Million: relative to population ${startText}`;
         } else {
           const country = this.inputs.scaleToCountryPopulation.name;
           // eslint-disable-next-line operator-linebreak
@@ -264,6 +307,7 @@ export default {
         const series = [];
         rawData.forEach((element) => {
           let scaleMultiplier = 1;
+          const population = this.countries.populations[element.country];
           if (this.inputs.scaleToCountryPopulation !== '0') {
             // if we are showing percent of population
             if (this.inputs.scaleToCountryPopulation === '1') {
@@ -288,29 +332,37 @@ export default {
             const value = element.deaths[dateProp];
             let addData = false;
 
-            // if (this.inputs.scaleToCountryPopulation !== '0') {
-            if (
-              // eslint-disable-next-line operator-linebreak
-              this.getDeathsPerMillion(value, scaleMultiplier) >=
-              this.inputs.firstDayDeathsPerMillionOver
-            ) {
-              addData = true;
+            console.log(
+              'this.inputs.firstDayMode',
+              this.inputs.firstDayMode,
+              firstDayModes.deathsPerMillion,
+            );
+            if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
+              console.log(
+                'this.inputs.firstDayMode',
+                this.getDeathsPerMillion(value, population),
+                this.inputs.firstDayDeathsPerMillionOver,
+              );
+              if (
+                // eslint-disable-next-line operator-linebreak
+                this.getDeathsPerMillion(value, population) >=
+                this.inputs.firstDayDeathsPerMillionOver
+              ) {
+                addData = true;
+              }
+            } else {
+              // based on straight death count
+              addData = value >= this.inputs.firstDayDeathsOver;
             }
-            // } else {
-            //   addData = value >= this.inputs.firstDayDeathsOver;
-            // }
+
+            console.log('this.inputs.firstDayMode', addData);
 
             if (addData) {
-              // console.log(
-              //   this.inputs.scaleToCountryPopulation,
-              //   this.inputs.scaleToCountryPopulation > 0,
-              // );
-
               // if we are showing percent of population
               // console.log(element.country, this.inputs.scaleToCountryPopulation, scaleMultiplier);
               if (this.inputs.scaleToCountryPopulation === '1') {
-                // console.log(element.country, value, scaleMultiplier, value / scaleMultiplier);
-                const deathsPerMillion = this.getDeathsPerMillion(value, scaleMultiplier);
+                // console.log(element.country, value, scaleMultiplier, value / population);
+                const deathsPerMillion = this.getDeathsPerMillion(value, population);
                 data.push(Math.round(deathsPerMillion));
               } else {
                 data.push(Math.round(value * scaleMultiplier));
@@ -345,6 +397,21 @@ export default {
     },
     initInputs() {
       const params = new URLSearchParams(window.location.search);
+      if (params.has('mode')) {
+        if (params.get('mode') === firstDayModes.deaths) {
+          this.inputs.firstDayMode = firstDayModes.deaths;
+        } else {
+          this.inputs.firstDayMode = firstDayModes.deathsPerMillion;
+        }
+      }
+
+      if (params.has('startAfter') && parseInt(params.get('startAfter'), 10)) {
+        if (this.inputs.firstDayMode === firstDayModes.deaths) {
+          this.inputs.firstDayDeathsOver = parseInt(params.get('startAfter'), 10);
+        } else {
+          this.inputs.firstDayDeathsPerMillionOver = parseInt(params.get('startAfter'), 10);
+        }
+      }
       if (params.has('deaths') && parseInt(params.get('deaths'), 10)) {
         this.inputs.minDeaths = parseInt(params.get('deaths'), 10);
       }
@@ -395,7 +462,7 @@ ul {
 a {
   color: #42b983;
 }
-.min-deaths {
+.small-number {
   width: 50px;
 }
 #chart {
