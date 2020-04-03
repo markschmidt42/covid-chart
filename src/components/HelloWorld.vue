@@ -6,7 +6,15 @@
       type="number"
       min="20"
       class="small-number"
-    /> and start showing "day 1" after
+    />
+    (as of {{lastDateName}})
+    <br />
+    <strong>x-axis:</strong>
+    <select v-model="inputs.firstDayMode">
+      <option value="deathsPerMillion">Days after deaths per million >=</option>
+      <option value="deaths">Days after deaths >=</option>
+      <option value="chronological">Chronological</option>
+    </select>
     <input
       v-if="inputs.firstDayMode === 'deaths'"
       v-model="inputs.firstDayDeathsOver"
@@ -21,9 +29,6 @@
       min="1"
       class="small-number"
     />
-    (
-    <input type="radio" v-model="inputs.firstDayMode" value="deaths" />deaths or
-    <input type="radio" v-model="inputs.firstDayMode" value="deathsPerMillion" />deaths per million )
     <br />
     <span :title="tooltips.scalePopulation">
       Scale to Population:
@@ -50,6 +55,10 @@
         <a
           href="?mode=deaths&startAfter=100&scale=0&deaths=1000"
         >HERE (no population scale, timelines starts after deaths >= 100)</a>
+        <br />Or they were like this
+        <a
+          href="?mode=chronological&scale=0&deaths=1000"
+        >HERE (no population scale, timeline chronological)</a>
       </li>
       <li>
         So I built this one
@@ -112,6 +121,7 @@ const historicalDataApiUrl = 'https://corona.lmao.ninja/v2/historical';
 const firstDayModes = {
   deaths: 'deaths',
   deathsPerMillion: 'deathsPerMillion',
+  chronological: 'chronological',
 };
 
 console.log(populationContants.populations);
@@ -172,9 +182,6 @@ export default {
         },
       },
       tooltip: {
-        x: {
-          formatter: (value) => `${value} days after`,
-        },
         y: {
           formatter: (value) => `${value.toLocaleString()}`,
         },
@@ -244,6 +251,9 @@ export default {
       console.log('cleanUpData() POST');
       return merged;
     },
+    getDates(data) {
+      return Object.keys(data);
+    },
     getDeathsByCountry(data, country) {
       console.log('getDeathsByCountry', data.length, country);
       const countryData = data.filter((item) => item.country === country);
@@ -258,7 +268,7 @@ export default {
       // console.log(deaths);
       console.log(deaths);
       const merged = {};
-      const dataProps = Object.keys(deaths[0]);
+      const dataProps = this.getDates(deaths[0]);
       for (let i = 0; i <= dataProps.length; i += 1) {
         const dateProp = dataProps[i];
         if (dateProp) {
@@ -274,22 +284,23 @@ export default {
       return merged;
     },
     getTopDeaths() {
-      return (
-        this.historical
-          .filter((a) => a.deaths[this.lastDateName] >= this.inputs.minDeaths)
-          // .sort((a, b) => b.deaths[this.lastDateName] - a.deaths[this.lastDateName]);
-          .sort((a, b) => b.country - a.country)
-      );
+      return this.historical
+        .filter((a) => a.deaths[this.lastDateName] >= this.inputs.minDeaths)
+        .sort((a, b) => b.deaths[this.lastDateName] - a.deaths[this.lastDateName]);
+      // .sort((a, b) => b.country - a.country)
     },
     updateLabels() {
       console.log('updateLabels PRE', this.chartOptions.title.text);
 
-      let startText = `(after having ${this.inputs.firstDayDeathsOver} deaths)`;
+      let startText = 'chronological';
       if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
-        startText = `(after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per million)`;
+        startText = `after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per million`;
+      } else if (this.inputs.firstDayMode === firstDayModes.deaths) {
+        startText = `after having ${this.inputs.firstDayDeathsOver} deaths`;
       }
 
-      let title = `Total Deaths ${startText}`;
+      let title = 'Total Deaths';
+      let subtitle = `${startText}`;
 
       if (this.inputs.scaleToCountryPopulation !== '0') {
         if (this.inputs.scaleToCountryPopulation === '1') {
@@ -300,16 +311,32 @@ export default {
           // eslint-disable-next-line operator-linebreak
           title =
             // eslint-disable-next-line operator-linebreak
-            `Deaths per country as if the country was the size of ${country} ` +
+            `Deaths per country: Simulated as if each country were the size of ${country} `;
+          // eslint-disable-next-line operator-linebreak
+          subtitle +=
             // eslint-disable-next-line operator-linebreak
-            `(this simulates if the spread was the same in each country, but had the population of ${country}. ` +
+            ` (this simulates what it might be like if the spread was the same in each country, but had the population of ${country}. ` +
             `This might tell you what the ${country} could be facing.)`;
         }
+      }
+      let xaxis = {
+        categories: null,
+      };
+      if (this.inputs.firstDayMode === firstDayModes.chronological) {
+        console.log('this.historical[0]', this.historical[0].deaths);
+        const dates = this.getDates(this.historical[0].deaths);
+        xaxis = {
+          categories: dates,
+        };
       }
       this.chartOptions = {
         title: {
           text: title,
         },
+        subtitle: {
+          text: subtitle,
+        },
+        xaxis,
       };
       console.log('updateLabels POST', this.chartOptions.title.text);
     },
@@ -355,7 +382,12 @@ export default {
               this.inputs.firstDayMode,
               firstDayModes.deathsPerMillion,
             );
-            if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
+            if (this.inputs.firstDayMode === firstDayModes.chronological) {
+              // include them all
+              if (value !== undefined) {
+                addData = true;
+              }
+            } else if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
               console.log(
                 'this.inputs.firstDayMode',
                 this.getDeathsPerMillion(value, population),
@@ -373,7 +405,7 @@ export default {
               addData = value >= this.inputs.firstDayDeathsOver;
             }
 
-            console.log('this.inputs.firstDayMode', addData);
+            console.log('this.inputs.firstDayMode', this.inputs.firstDayMode, addData);
 
             if (addData) {
               // if we are showing percent of population
@@ -391,7 +423,6 @@ export default {
           series.push({
             name: element.country,
             data,
-            color: 'red',
           });
         });
         this.series = series;
@@ -418,6 +449,8 @@ export default {
       if (params.has('mode')) {
         if (params.get('mode') === firstDayModes.deaths) {
           this.inputs.firstDayMode = firstDayModes.deaths;
+        } else if (params.get('mode') === firstDayModes.chronological) {
+          this.inputs.firstDayMode = firstDayModes.chronological;
         } else {
           this.inputs.firstDayMode = firstDayModes.deathsPerMillion;
         }
@@ -452,7 +485,7 @@ export default {
   },
   computed: {
     topDeaths() {
-      return this.getTopDeaths();
+      return this.getTopDeaths().sort((a, b) => b.country - a.country);
     },
   },
   created() {
