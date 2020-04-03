@@ -1,7 +1,12 @@
 <template>
   <div class="hello">
     countries: {{ topDeaths.length }} / {{ historical.length }} (with deaths >=
-    <input v-model="inputs.minDeaths" type="number" min="20" class="min-death" /> )
+    <input
+      v-model="inputs.minDeaths"
+      type="number"
+      min="20"
+      class="min-death"
+    /> )
     <span :title="tooltips.scalePopulation">
       Scale to Population:
       <select v-model="inputs.scaleToCountryPopulation">
@@ -11,14 +16,33 @@
           v-for="item in topDeaths"
           :key="item.country"
           :value="{ population: countries.populations[item.country], name: item.country }"
-          >{{ item.country }} ({{ countries.populations[item.country].toLocaleString() }})</option
-        >
+        >{{ item.country }} ({{ countries.populations[item.country].toLocaleString() }})</option>
       </select>
     </span>
     <div id="chart">
       <apexchart type="line" height="650" :options="chartOptions" :series="series"></apexchart>
     </div>
-    TODO: get the height to fill the screen in a smart way
+    <ul>
+      <li>
+        As a business owner, I am very interested in predicting when we can SAFELY get back to work.
+        This was built to help predict where we are at in the pandemic (beginning, middle or end).
+      </li>
+      <li>
+        This chart uses death data becasue I feel it is more accurate. Case data is too inconsistent across countries/states.
+        Testing is all ove the place. So even though death data can be anywhere from 14-21 days LAGGING.
+        If we start seeing the rate slow down in deaths, we can be sure we are on the downtrend of cases.
+        However, even though this is way more accurate, there are many reports that even the deaths are under reported.
+        Some are dying and not getting tested, some are dying and not even making it to the hospital.
+        Reports in Italy say it could be under reported by even double in some villages.
+      </li>
+      <li>Many of the charts out there do not take into account population. So this one does that.</li>
+      <li>
+        I also wanted to be able to say "If it were to spread here (in the USA), at the same rate in does in say Italy or
+        Spain or Iran, ... What would the death toll potentially look like?" also "If we were the same as anothe country,
+        are we 'just getting started' or are we 'past the peak', ...?"
+      </li>
+      <li>TODO: get the height to fill the screen in a smart way</li>
+    </ul>
   </div>
 </template>
 
@@ -337,8 +361,8 @@ h3 {
   margin: 40px 0 0;
 }
 ul {
-  list-style-type: none;
-  padding: 0;
+  list-style-type: disc;
+  text-align: left;
 }
 
 a {
