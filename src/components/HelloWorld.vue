@@ -59,7 +59,7 @@
       </li>
       <li>
         This chart uses death data because I feel it is more accurate. Case data is too inconsistent across countries/states.
-        Testing is all ove the place. So even though death data can be anywhere from 14-21 days LAGGING.
+        Testing is all over the place. So even though death data can be anywhere from 14-21 days LAGGING.
         If we start seeing the rate slow down in deaths, we can be sure we are on the downtrend of cases.
         However, even though this is way more accurate, there are many reports that even the deaths are under reported.
         Some are dying and not getting tested, some are dying and not even making it to the hospital.
@@ -77,9 +77,27 @@
         Spain or Iran, ... What would the death toll potentially look like?" also "If we were the same as another country,
         are we 'just getting started' or are we 'past the peak', ...?"
       </li>
-      <li>TODO: get the height to fill the screen in a smart way</li>
-      <li>TODO: Allow user to change between first X deaths per million or first X deaths (so they can see the difference)</li>
-      <li>TODO: Allow user to change the "X" in the item above first 100 deaths, first 50 deaths or first 3/million or 5/million etc</li>
+      <li>
+        Source of data for this chart is updated daily (end of day totals only) from here:
+        <a
+          href="https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical"
+          target="_blank"
+        >https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical</a>
+      </li>
+      <li>
+        Additional Sources: This is a great source of data
+        <a
+          href="https://www.worldometers.info/coronavirus/"
+          target="_blank"
+        >https://www.worldometers.info/coronavirus/</a>
+      </li>
+      <li>
+        Additional Sources: This one is too
+        <a
+          href="https://www.nytimes.com/interactive/2020/03/21/upshot/coronavirus-deaths-by-country.html"
+          target="_blank"
+        >https://www.nytimes.com/interactive/2020/03/21/upshot/coronavirus-deaths-by-country.html</a>
+      </li>
     </ul>
   </div>
 </template>
@@ -467,6 +485,6 @@ a {
 }
 #chart {
   border: solid 1px #999;
-  height: 90vh;
+  // height: 90vh;
 }
 </style>
