@@ -37,11 +37,19 @@
       </li>
       <li>Many of the charts out there do not take into account population. So this one does that.</li>
       <li>
+        Many of the charts out there start at graphing the data after the first 100 deaths. But again,
+        this DOES NOT take into account population so gives a false timeline comparison IMO. USA's first 100 deaths is
+        nothing compared to Luxembourg's first 100 deaths. So instead, this looks at when they hit 3 deaths per million.
+        Puts everyone at the same scale IMO.
+      </li>
+      <li>
         I also wanted to be able to say "If it were to spread here (in the USA), at the same rate in does in say Italy or
         Spain or Iran, ... What would the death toll potentially look like?" also "If we were the same as anothe country,
         are we 'just getting started' or are we 'past the peak', ...?"
       </li>
       <li>TODO: get the height to fill the screen in a smart way</li>
+      <li>TODO: Allow user to change between first X deaths per million or first X deaths (so they can see the difference)</li>
+      <li>TODO: Allow user to change the "X" in the item above first 100 deaths, first 50 deaths or first 3/million or 5/million etc</li>
     </ul>
   </div>
 </template>
@@ -62,9 +70,10 @@ export default {
     lastDateName: '4/1/20',
     refreshDataEveryMiliseconds: 1000 * 60 * 60 * 2, // every 2 hours
     inputs: {
-      minDeaths: 1000,
+      minDeaths: 2000,
       scaleToCountryPopulation: '0',
       firstDayDeathsOver: 100,
+      firstDayDeathsPerMillionOver: 3,
     },
     tooltips: {
       scalePopulation:
@@ -219,12 +228,12 @@ export default {
     },
     updateLabels() {
       console.log('updateLabels PRE', this.chartOptions.title.text);
-      let title = `Total Deaths (after having ${this.inputs.firstDayDeathsOver} total deaths in the country)`;
+      let title = `Total Deaths (after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per million in the country)`;
 
       if (this.inputs.scaleToCountryPopulation !== '0') {
         if (this.inputs.scaleToCountryPopulation === '1') {
           // eslint-disable-next-line max-len
-          title = `Deaths per Million (relative to population of the country, after having ${this.inputs.firstDayDeathsOver} total deaths in the country.)`;
+          title = `Deaths per Million (relative to population of the country, after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per Million in the country.)`;
         } else {
           const country = this.inputs.scaleToCountryPopulation.name;
           // eslint-disable-next-line operator-linebreak
@@ -277,7 +286,21 @@ export default {
             // debugger;
             const dateProp = dataProps[i];
             const value = element.deaths[dateProp];
-            if (value >= this.inputs.firstDayDeathsOver) {
+            let addData = false;
+
+            // if (this.inputs.scaleToCountryPopulation !== '0') {
+            if (
+              // eslint-disable-next-line operator-linebreak
+              this.getDeathsPerMillion(value, scaleMultiplier) >=
+              this.inputs.firstDayDeathsPerMillionOver
+            ) {
+              addData = true;
+            }
+            // } else {
+            //   addData = value >= this.inputs.firstDayDeathsOver;
+            // }
+
+            if (addData) {
               // console.log(
               //   this.inputs.scaleToCountryPopulation,
               //   this.inputs.scaleToCountryPopulation > 0,
@@ -287,7 +310,8 @@ export default {
               // console.log(element.country, this.inputs.scaleToCountryPopulation, scaleMultiplier);
               if (this.inputs.scaleToCountryPopulation === '1') {
                 // console.log(element.country, value, scaleMultiplier, value / scaleMultiplier);
-                data.push(Math.round((value / scaleMultiplier) * 1000000));
+                const deathsPerMillion = this.getDeathsPerMillion(value, scaleMultiplier);
+                data.push(Math.round(deathsPerMillion));
               } else {
                 data.push(Math.round(value * scaleMultiplier));
               }
@@ -312,6 +336,9 @@ export default {
       //     data: [41, 35, 51, 49, 62, 69, 91, 148],
       //   },
       // ];
+    },
+    getDeathsPerMillion(deaths, population) {
+      return (deaths / population) * 1000000;
     },
     initValues() {
       this.lastDateName = this.getLastDate();
@@ -372,7 +399,7 @@ a {
   width: 50px;
 }
 #chart {
-  border: solid 1px red;
+  border: solid 1px #999;
   height: 90vh;
 }
 </style>
