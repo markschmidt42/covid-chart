@@ -284,9 +284,7 @@ export default {
       return merged;
     },
     getTopDeaths() {
-      return this.historical
-        .filter((a) => a.deaths[this.lastDateName] >= this.inputs.minDeaths)
-        .sort((a, b) => b.deaths[this.lastDateName] - a.deaths[this.lastDateName]);
+      return this.historical.filter((a) => a.deaths[this.lastDateName] >= this.inputs.minDeaths);
       // .sort((a, b) => b.country - a.country)
     },
     updateLabels() {
@@ -348,7 +346,9 @@ export default {
 
         this.updateLabels();
 
-        const rawData = this.getTopDeaths();
+        const rawData = this.getTopDeaths().sort(
+          (a, b) => b.deaths[this.lastDateName] - a.deaths[this.lastDateName],
+        );
         const series = [];
         rawData.forEach((element) => {
           let scaleMultiplier = 1;
