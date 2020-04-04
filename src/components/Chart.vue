@@ -1,51 +1,68 @@
 <template>
-  <div class="hello">
-    Only include countries where current total deaths >=
-    <input
-      v-model="inputs.minDeaths"
-      type="number"
-      min="20"
-      class="small-number"
-    />
-    (as of {{lastDateName}})
-    <br />
-    <strong>x-axis:</strong>
-    <select v-model="inputs.firstDayMode">
-      <option value="deathsPerMillion">Days after deaths per million >=</option>
-      <option value="deaths">Days after deaths >=</option>
-      <option value="chronological">Chronological (by date) >=</option>
-    </select>
-    <input
-      v-if="inputs.firstDayMode === 'deaths'"
-      v-model="inputs.firstDayDeathsOver"
-      type="number"
-      min="1"
-      class="small-number"
-    />
-    <input
-      v-if="inputs.firstDayMode === 'deathsPerMillion'"
-      v-model="inputs.firstDayDeathsPerMillionOver"
-      type="number"
-      min="1"
-      class="small-number"
-    />
-    <select v-if="inputs.firstDayMode === 'chronological'" v-model="inputs.firstDayIndex">
-      <option v-for="(item, index) in dateKeys" :key="index" :value="index">{{ item }}</option>
-    </select>
+  <div class="chart-container">
+    <div class="inputs-container">
+      <div class="inputs group-1">
+        <div class="input-container">
+          <label>Only include countries where current total deaths >=</label>
 
-    <br />
-    <span :title="tooltips.scalePopulation">
-      Scale to Population:
-      <select v-model="inputs.scaleToCountryPopulation">
-        <option value="0">Do not scale by population</option>
-        <option value="1">Scale by Deaths per Million (population)</option>
-        <option
-          v-for="item in topDeaths"
-          :key="item.country"
-          :value="{ population: countries.populations[item.country], name: item.country }"
-        >{{ item.country }} ({{ countries.populations[item.country].toLocaleString() }})</option>
-      </select>
-    </span>
+          <input v-model="inputs.minDeaths" type="number" min="20" class="small-number" />
+          <label>&nbsp;(as of {{lastDateName}})</label>
+        </div>
+
+        <div class="input-container">
+          <label>Data Points:</label>
+          <select v-model="inputs.showNew">
+            <option :value="false">Show Total/Cumulative Deaths</option>
+            <option :value="true">Show Daily/New Deaths</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="inputs group-2">
+        <div class="input-container">
+          <label>X-axis:</label>
+          <select v-model="inputs.firstDayMode">
+            <option value="deathsPerMillion">Days after deaths per million</option>
+            <option value="deaths">Days after deaths</option>
+            <option value="chronological">Chronological (by date)</option>
+          </select>
+          <label>&nbsp;>=</label>
+          <input
+            v-if="inputs.firstDayMode === 'deaths'"
+            v-model="inputs.firstDayDeathsOver"
+            type="number"
+            min="1"
+            class="small-number"
+          />
+          <input
+            v-if="inputs.firstDayMode === 'deathsPerMillion'"
+            v-model="inputs.firstDayDeathsPerMillionOver"
+            type="number"
+            min="1"
+            class="small-number"
+          />
+          <select v-if="inputs.firstDayMode === 'chronological'" v-model="inputs.firstDayIndex">
+            <option v-for="(item, index) in dateKeys" :key="index" :value="index">{{ item }}</option>
+          </select>
+        </div>
+
+        <div class="input-container">
+          <label>Scale to Population:</label>
+          <span :title="tooltips.scalePopulation">
+            <select v-model="inputs.scaleToCountryPopulation">
+              <option value="0">Do not scale</option>
+              <option value="1">Scale by Deaths per Million (population)</option>
+              <option
+                v-for="item in topDeaths"
+                :key="item.country"
+                :value="{ population: countries.populations[item.country], name: item.country }"
+              >Scale to population of {{ item.country }} ({{ countries.populations[item.country].toLocaleString() }})</option>
+            </select>
+          </span>
+        </div>
+      </div>
+    </div>
+
     <div id="chart">
       <apexchart type="line" height="650" :options="chartOptions" :series="series"></apexchart>
     </div>
@@ -77,10 +94,11 @@ export default {
     lastDateName: '4/1/20',
     refreshDataEveryMiliseconds: 1000 * 60 * 60 * 2, // every 2 hours
     inputs: {
+      showNew: false,
       minDeaths: 3000,
       scaleToCountryPopulation: '1',
       firstDayMode: firstDayModes.deathsPerMillion,
-      firstDayIndex: 40,
+      firstDayIndex: 40, // 3/2/2020
       firstDayDeathsOver: 100,
       firstDayDeathsPerMillionOver: 3,
     },
@@ -390,7 +408,12 @@ export default {
           for (let i = 0; i <= dataProps.length; i += 1) {
             // debugger;
             const dateProp = dataProps[i];
-            const value = element.deaths[dateProp];
+            let value = element.deaths[dateProp];
+            let prevValue = 0;
+            if (this.inputs.showNew && i > 0) {
+              const prevDateProp = dataProps[i - 1];
+              prevValue = element.deaths[prevDateProp];
+            }
 
             const addData = this.isDataAboveThreshold(population, i, value);
 
@@ -402,15 +425,19 @@ export default {
 
             // console.log('this.inputs.firstDayMode', this.inputs.firstDayMode, addData);
 
+            if (this.inputs.showNew) {
+              value -= prevValue;
+            }
+
             if (addData) {
               // if we are showing percent of population
               // console.log(element.country, this.inputs.scaleToCountryPopulation, scaleMultiplier);
               if (this.inputs.scaleToCountryPopulation === '1') {
                 // console.log(element.country, value, scaleMultiplier, value / population);
                 const deathsPerMillion = this.getDeathsPerMillion(value, population);
-                data.push(Math.round(deathsPerMillion));
+                data.push(Math.round(deathsPerMillion * 10.0) / 10);
               } else {
-                data.push(Math.round(value * scaleMultiplier));
+                data.push(Math.round(value * scaleMultiplier * 10.0) / 10);
               }
             }
           }
@@ -421,7 +448,7 @@ export default {
           });
         });
         this.series = series;
-      }, 100);
+      }, 250);
       // return [
       //   {
       //     name: 'Test',
@@ -434,7 +461,7 @@ export default {
       // ];
     },
     getDeathsPerMillion(deaths, population) {
-      return (deaths / population) * 1000000;
+      return (deaths / population) * 1000000.0;
     },
     initValues() {
       this.lastDateName = this.getLastDate();
@@ -448,6 +475,12 @@ export default {
           this.inputs.firstDayMode = firstDayModes.chronological;
         } else {
           this.inputs.firstDayMode = firstDayModes.deathsPerMillion;
+        }
+      }
+
+      if (params.has('show')) {
+        if (params.get('show') === 'new') {
+          this.inputs.showNew = true;
         }
       }
 
@@ -503,11 +536,62 @@ export default {
 h3 {
   margin: 40px 0 0;
 }
+
+.inputs-container {
+  display: flex;
+  flex-direction: row;
+  align-content: space-between;
+
+  .inputs {
+    flex-grow: 1;
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+
+    &.group-1 {
+    }
+    &.group-2 {
+      align-items: flex-end;
+    }
+
+    .input-container {
+      margin-bottom: 4px;
+      label {
+        font-weight: bold;
+        font-size: 0.9em;
+        padding-right: 5px;
+      }
+      select {
+        min-height: 26px;
+      }
+
+      input,
+      select {
+        background: beige;
+        padding: 3px 4px;
+        font-size: 1em;
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 1050px) {
+  .inputs-container {
+    flex-direction: column;
+
+    .inputs.group-2 {
+      align-items: flex-start;
+    }
+  }
+}
+
 #chart {
   border: solid 1px #999;
   // height: 90vh;
 }
 .small-number {
-  width: 50px;
+  width: 60px;
+  text-align: right;
+  margin-left: 4px;
 }
 </style>

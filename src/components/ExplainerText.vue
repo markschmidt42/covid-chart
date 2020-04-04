@@ -122,7 +122,9 @@
             If not Chronological, when a user mouseovers a data point,
             the tooltip will show the date that the data point is for (rather than just days after)
           </li>
-          <li>Allow user to toggle between "new daily deaths" (new feature) or "cumulative deaths" (current view)</li>
+          <li
+            class="done"
+          >Allow user to toggle between "new daily deaths" (new feature) or "cumulative deaths" (current view)</li>
           <li>Make it responsive/mobile-friendly</li>
           <li>
             Make it way prettier :) I threw this together in like 4-5 hours. It's accurate, but it's ugly,
@@ -143,5 +145,8 @@ ul {
 
 ul li {
   margin-bottom: 10px;
+  &.done {
+    text-decoration: line-through;
+  }
 }
 </style>
