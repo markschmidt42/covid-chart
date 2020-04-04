@@ -187,6 +187,9 @@ export default {
       stroke: {
         // curve: 'smooth',
         curve: 'straight',
+        // todo: make this smarter
+        width: [6, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+        // dashArray: [0, 8, 5],
       },
       title: {
         text: 'Total Deaths after X Deaths',
@@ -301,7 +304,16 @@ export default {
       return merged;
     },
     getTopDeaths() {
-      return this.historical.filter((a) => a.deaths[this.lastDateName] >= this.inputs.minDeaths);
+      return this.historical.filter(
+        (a) =>
+          // if current deaths are greater than ..
+          // eslint-disable-next-line implicit-arrow-linebreak, operator-linebreak
+          a.deaths[this.lastDateName] >= this.inputs.minDeaths &&
+          this.isDataAboveThreshold(
+            this.countries.populations[a.country],
+            a.deaths[this.lastDateName],
+          ),
+      );
       // .sort((a, b) => b.country - a.country)
     },
     updateLabels() {
@@ -355,6 +367,30 @@ export default {
       };
       console.log('updateLabels POST', this.chartOptions.title.text);
     },
+    isDataAboveThreshold(population, value) {
+      if (this.inputs.firstDayMode === firstDayModes.chronological) {
+        // include them all
+        if (value !== undefined) {
+          return true;
+        }
+      } else if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
+        console.log(
+          'this.inputs.firstDayMode',
+          this.getDeathsPerMillion(value, population),
+          this.inputs.firstDayDeathsPerMillionOver,
+        );
+        if (
+          // eslint-disable-next-line operator-linebreak
+          this.getDeathsPerMillion(value, population) >= this.inputs.firstDayDeathsPerMillionOver
+        ) {
+          return true;
+        }
+      } else {
+        // based on straight death count
+        return value >= this.inputs.firstDayDeathsOver;
+      }
+      return false;
+    },
     updateSeries() {
       console.log('updateSeries()');
       clearTimeout(window.timersUpdate);
@@ -363,9 +399,12 @@ export default {
 
         this.updateLabels();
 
-        const rawData = this.getTopDeaths().sort(
-          (a, b) => b.deaths[this.lastDateName] - a.deaths[this.lastDateName],
-        );
+        // eslint-disable-next-line arrow-body-style
+        const rawData = this.getTopDeaths().sort((a, b) => {
+          return a.country === 'USA'
+            ? -1
+            : b.deaths[this.lastDateName] - a.deaths[this.lastDateName];
+        });
         const series = [];
         rawData.forEach((element) => {
           let scaleMultiplier = 1;
@@ -392,37 +431,16 @@ export default {
             // debugger;
             const dateProp = dataProps[i];
             const value = element.deaths[dateProp];
-            let addData = false;
 
-            console.log(
-              'this.inputs.firstDayMode',
-              this.inputs.firstDayMode,
-              firstDayModes.deathsPerMillion,
-            );
-            if (this.inputs.firstDayMode === firstDayModes.chronological) {
-              // include them all
-              if (value !== undefined) {
-                addData = true;
-              }
-            } else if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
-              console.log(
-                'this.inputs.firstDayMode',
-                this.getDeathsPerMillion(value, population),
-                this.inputs.firstDayDeathsPerMillionOver,
-              );
-              if (
-                // eslint-disable-next-line operator-linebreak
-                this.getDeathsPerMillion(value, population) >=
-                this.inputs.firstDayDeathsPerMillionOver
-              ) {
-                addData = true;
-              }
-            } else {
-              // based on straight death count
-              addData = value >= this.inputs.firstDayDeathsOver;
-            }
+            const addData = this.isDataAboveThreshold(population, value);
 
-            console.log('this.inputs.firstDayMode', this.inputs.firstDayMode, addData);
+            // console.log(
+            //   'this.inputs.firstDayMode',
+            //   this.inputs.firstDayMode,
+            //   firstDayModes.deathsPerMillion,
+            // );
+
+            // console.log('this.inputs.firstDayMode', this.inputs.firstDayMode, addData);
 
             if (addData) {
               // if we are showing percent of population
