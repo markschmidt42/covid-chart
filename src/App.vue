@@ -1,16 +1,19 @@
 <template>
   <div id="app">
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+    <Chart />
+    <ExplainerText />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue';
+import Chart from './components/Chart.vue';
+import ExplainerText from './components/ExplainerText.vue';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld,
+    Chart,
+    ExplainerText,
   },
 };
 </script>
@@ -22,5 +25,8 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+a {
+  color: #008ffb;
 }
 </style>
