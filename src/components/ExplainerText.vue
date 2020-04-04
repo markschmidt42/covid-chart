@@ -64,7 +64,7 @@
             are we 'just getting started' or are we 'past the peak', ...?".
             <br />You can do this by
             <strong>selecting USA in the drop down</strong>,
-            then put your ouse over Italy or other countries to "see where we are heading"
+            then put your mouse over Italy or other countries to "see where we are heading"
           </li>
         </ul>
       </li>
