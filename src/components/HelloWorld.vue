@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    Only show where current total deaths >=
+    Only include countries where current total deaths >=
     <input
       v-model="inputs.minDeaths"
       type="number"
@@ -13,7 +13,7 @@
     <select v-model="inputs.firstDayMode">
       <option value="deathsPerMillion">Days after deaths per million >=</option>
       <option value="deaths">Days after deaths >=</option>
-      <option value="chronological">Chronological</option>
+      <option value="chronological">Chronological (by date)</option>
     </select>
     <input
       v-if="inputs.firstDayMode === 'deaths'"
@@ -122,7 +122,7 @@
           </li>
           <li>
             As of 4/3/20, Assuming we are following the path of Italy, which the data says we are...
-            Sadly, we are just getting started in the USA. Total deaths today are roughly 7,000. in 20 days from
+            Sadly, we are just getting started in the USA. Total deaths today are roughly 7,000. In 20 days from
             now (4/23), we could be around 80,000+ deaths. STAY INSIDE PEOPLE.
           </li>
           <li>
@@ -235,9 +235,10 @@ export default {
           enabled: true,
         },
       },
-      dataLabels: {
-        enabled: false,
-      },
+      // dataLabels: {
+      //   enabled: true,
+      //   enabledOnSeries: [0],
+      // },
       stroke: {
         // curve: 'smooth',
         curve: 'straight',
@@ -373,7 +374,8 @@ export default {
     updateChartOptions() {
       console.log('updateChartOptions PRE', this.chartOptions.title.text);
 
-      let startText = 'chronological';
+      let yAxisTitle = 'Total Deaths per Country';
+      let startText = 'Chronological (by date)';
       if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
         startText = `after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per million`;
       } else if (this.inputs.firstDayMode === firstDayModes.deaths) {
@@ -386,18 +388,21 @@ export default {
       if (this.inputs.scaleToCountryPopulation !== '0') {
         if (this.inputs.scaleToCountryPopulation === '1') {
           // eslint-disable-next-line max-len
-          title = `Deaths per Million: relative to population ${startText}`;
+          title = 'Deaths per Million: relative to population';
+          yAxisTitle = 'Total Deaths per Million per Country';
         } else {
           const country = this.inputs.scaleToCountryPopulation.name;
           // eslint-disable-next-line operator-linebreak
           title =
             // eslint-disable-next-line operator-linebreak
-            `Deaths per country: Simulated as if each country were the size of ${country} `;
+            `Deaths per country: Simulated as if each country were the size of ${country} (${startText})`;
+
+          yAxisTitle = `SIMULATED: Total Deaths IF each country had the population of ${country}`;
           // eslint-disable-next-line operator-linebreak
-          subtitle +=
+          subtitle =
             // eslint-disable-next-line operator-linebreak
-            ` (this simulates what it might be like if the spread was the same in each country, but had the population of ${country}. ` +
-            `This might tell you what the ${country} could be facing.)`;
+            `If you think ${country} is going to follow in the footsteps of a country, ` +
+            `you can look at that country's data scaled to ${country}'s population. This might tell you where ${country} is heading.`;
         }
       }
       let xaxis = {
@@ -433,6 +438,13 @@ export default {
         },
         xaxis,
         stroke,
+        yaxis: [
+          {
+            title: {
+              text: yAxisTitle,
+            },
+          },
+        ],
       };
       console.log('updateChartOptions POST', this.chartOptions.title.text);
     },
