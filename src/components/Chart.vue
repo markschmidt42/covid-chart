@@ -3,10 +3,13 @@
     <div class="inputs-container">
       <div class="inputs group-1">
         <div class="input-container">
-          <label>Only include countries where current total deaths >=</label>
+          <label>
+            Only include countries where
+            <span class="hide-on-small">total current</span> deaths >=
+          </label>
 
           <input v-model="inputs.minDeaths" type="number" min="20" class="small-number" />
-          <label>&nbsp;(as of {{lastDateName}})</label>
+          <label class="hide-on-small">&nbsp;(as of {{lastDateName}})</label>
         </div>
 
         <div class="input-container">
@@ -47,7 +50,7 @@
         </div>
 
         <div class="input-container">
-          <label>Scale to Population:</label>
+          <label class="hide-on-small">Scale to Population:</label>
           <span :title="tooltips.scalePopulation">
             <select v-model="inputs.scaleToCountryPopulation">
               <option value="0">Do not scale</option>
@@ -575,6 +578,16 @@ h3 {
   }
 }
 
+#chart {
+  border: solid 1px #999;
+  // height: 90vh;
+}
+.small-number {
+  width: 60px;
+  text-align: right;
+  margin-left: 4px;
+}
+
 @media screen and (max-width: 1050px) {
   .inputs-container {
     flex-direction: column;
@@ -585,13 +598,29 @@ h3 {
   }
 }
 
-#chart {
-  border: solid 1px #999;
-  // height: 90vh;
-}
-.small-number {
-  width: 60px;
-  text-align: right;
-  margin-left: 4px;
+@media screen and (max-width: 520px) {
+  .hide-on-small {
+    display: none;
+  }
+  .inputs-container {
+    .input-container {
+      margin-bottom: 4px;
+      label {
+        font-weight: normal;
+        font-size: 0.6em;
+        padding-right: 1px;
+      }
+      select {
+        height: 21px;
+      }
+
+      input,
+      select {
+        background: beige;
+        padding: 1px 1px;
+        font-size: 0.8em;
+      }
+    }
+  }
 }
 </style>
