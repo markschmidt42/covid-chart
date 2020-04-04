@@ -105,7 +105,7 @@
           </li>
           <li>
             I also wanted to be able to say "If it were to spread here (in the USA), at the same rate in does in say Italy or
-            Spain or Iran, ... What would the death toll potentially look like?" also "If we were the same as another country,
+            Spain or UK, ... What would the death toll potentially look like?" also "If we were the same as another country,
             are we 'just getting started' or are we 'past the peak', ...?".
             <br />You can do this by
             <strong>selecting USA in the drop down</strong>,
@@ -119,6 +119,11 @@
           <li>
             As of 4/3/20, the USA seems to be following the path of Italy, UK and Netherlands. I hope we stay away
             from the path of France, Spain and Belgium.
+          </li>
+          <li>
+            As of 4/3/20, Assuming we are following the path of Italy, which the data says we are...
+            Sadly, we are just getting started in the USA. Total deaths today are roughly 7,000. in 20 days from
+            now (4/23), we could be around 80,000+ deaths. STAY INSIDE PEOPLE.
           </li>
           <li>
             China and Iran's numbers seem to be under-reported. When looking at the chart, they are not following
