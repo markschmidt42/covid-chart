@@ -119,10 +119,6 @@
         <strong>TO-DOs:</strong>
         <ul>
           <li>
-            If Chronological, allow user to chose the starting date of the chart (get rid of all
-            of the low China activity at the start)
-          </li>
-          <li>
             If not Chronological, when a user mouseovers a data point,
             the tooltip will show the date that the data point is for (rather than just days after)
           </li>

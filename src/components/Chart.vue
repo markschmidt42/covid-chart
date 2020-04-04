@@ -13,7 +13,7 @@
     <select v-model="inputs.firstDayMode">
       <option value="deathsPerMillion">Days after deaths per million >=</option>
       <option value="deaths">Days after deaths >=</option>
-      <option value="chronological">Chronological (by date)</option>
+      <option value="chronological">Chronological (by date) >=</option>
     </select>
     <input
       v-if="inputs.firstDayMode === 'deaths'"
@@ -29,6 +29,10 @@
       min="1"
       class="small-number"
     />
+    <select v-if="inputs.firstDayMode === 'chronological'" v-model="inputs.firstDayIndex">
+      <option v-for="(item, index) in dateKeys" :key="index" :value="index">{{ item }}</option>
+    </select>
+
     <br />
     <span :title="tooltips.scalePopulation">
       Scale to Population:
@@ -49,6 +53,8 @@
 </template>
 
 <script>
+/* eslint-disable operator-linebreak */
+
 import axios from 'axios';
 import populationContants from '@/constants/populations';
 
@@ -74,6 +80,7 @@ export default {
       minDeaths: 3000,
       scaleToCountryPopulation: '1',
       firstDayMode: firstDayModes.deathsPerMillion,
+      firstDayIndex: 40,
       firstDayDeathsOver: 100,
       firstDayDeathsPerMillionOver: 3,
     },
@@ -228,10 +235,11 @@ export default {
       return this.historical.filter(
         (a) =>
           // if current deaths are greater than ..
-          // eslint-disable-next-line implicit-arrow-linebreak, operator-linebreak
+          // eslint-disable-next-line implicit-arrow-linebreak
           a.deaths[this.lastDateName] >= this.inputs.minDeaths &&
           this.isDataAboveThreshold(
             this.countries.populations[a.country],
+            null,
             a.deaths[this.lastDateName],
           ),
       );
@@ -258,15 +266,11 @@ export default {
           yAxisTitle = 'Total Deaths per Million per Country';
         } else {
           const country = this.inputs.scaleToCountryPopulation.name;
-          // eslint-disable-next-line operator-linebreak
-          title =
-            // eslint-disable-next-line operator-linebreak
-            `Deaths per country: Simulated as if each country were the size of ${country} (${startText})`;
+          title = `Deaths per country: Simulated as if each country were the size of ${country} (${startText})`;
 
           yAxisTitle = `SIMULATED: Total Deaths IF each country had the population of ${country}`;
-          // eslint-disable-next-line operator-linebreak
+
           subtitle =
-            // eslint-disable-next-line operator-linebreak
             `If you think ${country} is going to follow in the footsteps of a country, ` +
             `you can look at that country's data scaled to ${country}'s population. This might tell you where ${country} is heading.`;
         }
@@ -276,7 +280,14 @@ export default {
       };
       if (this.inputs.firstDayMode === firstDayModes.chronological) {
         console.log('this.historical[0]', this.historical[0].deaths);
-        const dates = this.getDates(this.historical[0].deaths);
+        let dates = this.getDates(this.historical[0].deaths);
+
+        if (
+          this.inputs.firstDayMode === firstDayModes.chronological &&
+          this.inputs.firstDayIndex > 0
+        ) {
+          dates = dates.slice(this.inputs.firstDayIndex);
+        }
         xaxis = {
           categories: dates,
         };
@@ -314,11 +325,16 @@ export default {
       };
       console.log('updateChartOptions POST', this.chartOptions.title.text);
     },
-    isDataAboveThreshold(population, value) {
+    isDataAboveThreshold(population, index, value) {
       if (this.inputs.firstDayMode === firstDayModes.chronological) {
         // include them all
         if (value !== undefined) {
-          return true;
+          if (index === null) {
+            return true;
+          }
+          if (index >= this.inputs.firstDayIndex) {
+            return true;
+          }
         }
       } else if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
         console.log(
@@ -327,7 +343,6 @@ export default {
           this.inputs.firstDayDeathsPerMillionOver,
         );
         if (
-          // eslint-disable-next-line operator-linebreak
           this.getDeathsPerMillion(value, population) >= this.inputs.firstDayDeathsPerMillionOver
         ) {
           return true;
@@ -364,9 +379,7 @@ export default {
                 console.log(element.country, this.countries.populations[element.country]);
               }
             } else {
-              // eslint-disable-next-line operator-linebreak
               scaleMultiplier =
-                // eslint-disable-next-line operator-linebreak
                 this.inputs.scaleToCountryPopulation.population /
                 this.countries.populations[element.country];
             }
@@ -379,7 +392,7 @@ export default {
             const dateProp = dataProps[i];
             const value = element.deaths[dateProp];
 
-            const addData = this.isDataAboveThreshold(population, value);
+            const addData = this.isDataAboveThreshold(population, i, value);
 
             // console.log(
             //   'this.inputs.firstDayMode',
@@ -466,6 +479,9 @@ export default {
     },
   },
   computed: {
+    dateKeys() {
+      return this.getDates(this.historical[0].deaths);
+    },
     topDeaths() {
       return this.getTopDeaths().sort((a, b) => b.country - a.country);
     },
