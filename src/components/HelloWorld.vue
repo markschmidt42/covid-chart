@@ -172,6 +172,7 @@
             the tooltip will show the date that the data point is for (rather than just days after)
           </li>
           <li>Allow user to toggle between "new daily deaths" (new feature) or "cumulative deaths" (current view)</li>
+          <li>Make it responsive/mobile-friendly</li>
           <li>
             Make it way prettier :) I threw this together in like 4-5 hours. It's accurate, but it's ugly,
             don't view the source code :)
