@@ -79,7 +79,7 @@ import axios from 'axios';
 import populationContants from '@/constants/populations';
 
 // https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical
-const historicalDataApiUrl = 'https://corona.lmao.ninja/v2/historical';
+const historicalDataApiUrl = 'https://corona.lmao.ninja/v2/historical?lastdays=all';
 
 const firstDayModes = {
   deaths: 'deaths',
