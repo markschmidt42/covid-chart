@@ -187,13 +187,13 @@ export default {
     },
     async getHistoricalData() {
       console.log('getHistoricalData() PRE');
-      if (localStorage.historical && !this.dataIsExpired()) {
-        this.raw.historical = JSON.parse(localStorage.historical);
+      if (localStorage.historicalNew && !this.dataIsExpired()) {
+        this.raw.historical = JSON.parse(localStorage.historicalNew);
         console.log('grabbed from local');
       } else {
         await axios.get(historicalDataApiUrl).then((r) => {
           this.raw.historical = r.data;
-          localStorage.historical = JSON.stringify(r.data);
+          localStorage.historicalNew = JSON.stringify(r.data);
           localStorage.historicalExpired = new Date();
           console.log('grabbed from api');
         });
