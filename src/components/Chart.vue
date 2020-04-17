@@ -34,14 +34,14 @@
             v-if="inputs.firstDayMode === 'deaths'"
             v-model="inputs.firstDayDeathsOver"
             type="number"
-            min="1"
+            min="0"
             class="small-number"
           />
           <input
             v-if="inputs.firstDayMode === 'deathsPerMillion'"
             v-model="inputs.firstDayDeathsPerMillionOver"
             type="number"
-            min="1"
+            min="0"
             class="small-number"
           />
           <select v-if="inputs.firstDayMode === 'chronological'" v-model="inputs.firstDayIndex">
