@@ -487,14 +487,14 @@ export default {
         }
       }
 
-      if (params.has('startAfter') && parseInt(params.get('startAfter'), 10)) {
+      if (params.has('startAfter') && parseInt(params.get('startAfter'), 10) >= 0) {
         if (this.inputs.firstDayMode === firstDayModes.deaths) {
           this.inputs.firstDayDeathsOver = parseInt(params.get('startAfter'), 10);
         } else {
           this.inputs.firstDayDeathsPerMillionOver = parseInt(params.get('startAfter'), 10);
         }
       }
-      if (params.has('deaths') && parseInt(params.get('deaths'), 10)) {
+      if (params.has('deaths') && parseInt(params.get('deaths'), 10) >= 0) {
         this.inputs.minDeaths = parseInt(params.get('deaths'), 10);
       }
       if (params.has('scale')) {
