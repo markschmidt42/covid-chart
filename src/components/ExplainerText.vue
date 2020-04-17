@@ -97,14 +97,34 @@
               target="_blank"
             >https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical</a>
           </li>
+
           <li>
-            Worldometers: This is a great source of data
+            Our World in Data has some good deaths per million charts and graphs:
+            <br />
+            <a
+              href="https://ourworldindata.org/coronavirus"
+              target="_blank"
+            >https://ourworldindata.org/coronavirus</a>
+          </li>
+
+          <li>
+            All of the John Hopkins charts/dashboards are nice... Note: This is the original source data for the chart above:
+            <br />
+            <a
+              href="https://coronavirus.jhu.edu/us-map"
+              target="_blank"
+            >https://coronavirus.jhu.edu/us-map</a>
+          </li>
+
+          <li>
+            Worldometers: This is a great source of data (though it will not match this chart 100%, 2 different data sources)
             <br />
             <a
               href="https://www.worldometers.info/coronavirus/"
               target="_blank"
             >https://www.worldometers.info/coronavirus/</a>
           </li>
+
           <li>
             NY Times, Doubling Rate Charts. This one is too. When Doubling Rates slow down, we are getting in better shape
             <br />
