@@ -98,7 +98,7 @@ export default {
     refreshDataEveryMiliseconds: 1000 * 60 * 60 * 2, // every 2 hours
     inputs: {
       showNew: false,
-      minDeaths: 3000,
+      minDeaths: 1000,
       scaleToCountryPopulation: '1',
       firstDayMode: firstDayModes.deathsPerMillion,
       firstDayIndex: 40, // 3/2/2020
