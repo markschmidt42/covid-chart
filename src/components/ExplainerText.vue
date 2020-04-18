@@ -45,17 +45,17 @@
           <li>
             NEW: This chart scales by population:
             <br />
-            <a href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=3000">
+            <a href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=1000">
               [scale to population (deaths per million), timelines starts after deaths per million >= 3
-              and current deaths are >= 3000]
+              and current deaths are >= 1000]
             </a>
           </li>
           <li>
             NEW: So does this one, but with a few more countries
             <br />
-            <a href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=1000">
+            <a href="?mode=deathsPerMillion&startAfter=3&scale=1&deaths=100">
               [scale to population (deaths per million), timelines starts after deaths per million >= 3
-              and current deaths are >= 1000]
+              and current deaths are >= 100]
             </a>
           </li>
           <li>

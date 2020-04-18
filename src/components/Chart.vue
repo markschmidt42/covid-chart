@@ -89,6 +89,8 @@ const firstDayModes = {
 
 console.log(populationContants.populations);
 
+let globalData = {};
+
 export default {
   name: 'HelloWorld',
   data: () => ({
@@ -151,9 +153,33 @@ export default {
         },
       },
       tooltip: {
-        y: {
-          formatter: (value) => `${value.toLocaleString()}`,
-        },
+        // custom: (e) => {
+        //   console.log('globalData', globalData);
+        //   console.log('globalData', globalData.lastDateName);
+        //   console.log('e: ', e);
+        //   console.log('this.lastDateName): ', e.w.globals);
+        //   // console.log('this.lastDateName): ', this.lastDateName);
+        //   console.log(e);
+        //   // const seriesLength = e.series[e.seriesIndex].length;
+        //   // const daysBack = seriesLength - e.dataPointIndex - 1;
+        //   const actualDay = '4/2/2020';
+        //   const countryName = e.w.globals.seriesNames[e.seriesIndex];
+        //   return `<div><div style='display:inline-block;border-radius:5px;background-color:${
+        //     e.w.globals.colors[e.seriesIndex]
+        //   };width:10px;height:10px;'></div> ${countryName} on ${actualDay}: ${
+        //     e.series[e.seriesIndex][e.dataPointIndex]
+        //   }</div>`;
+        //   // return `<div>${e.series} ${e.seriesIndex} ${e.dataPointIndex} ${e.w}</div>`;
+        // },
+        // y: {
+        //   formatter: (value) => `${value.toLocaleString()} (more info)`,
+        //   title: {
+        //     formatter: (seriesName) => `${seriesName} (more info)`,
+        //   },
+        // },
+      },
+      yaxis: {
+        min: 0,
       },
       // xaxis: {
       //   categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
@@ -525,6 +551,9 @@ export default {
     },
   },
   created() {
+    // attempting to get access to something in the tooltip
+    globalData = this.$data;
+    console.log(globalData);
     this.initValues();
     this.initInputs();
     this.getHistoricalData().then(() => {
