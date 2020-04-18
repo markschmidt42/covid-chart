@@ -498,7 +498,9 @@ export default {
         this.inputs.minDeaths = parseInt(params.get('deaths'), 10);
       }
       if (params.has('scale')) {
-        this.inputs.scaleToCountryPopulation = params.get('scale');
+        if (parseInt(params.get('deaths'), 10) >= 0) {
+          this.inputs.scaleToCountryPopulation = params.get('scale');
+        }
       }
     },
     getLastDate() {
