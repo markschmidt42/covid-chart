@@ -77,6 +77,7 @@
 
 import axios from 'axios';
 import populationContants from '@/constants/populations';
+import dateService from '@/services/date.service';
 
 // https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical
 const historicalDataApiUrl = 'https://corona.lmao.ninja/v2/historical?lastdays=all';
@@ -153,24 +154,37 @@ export default {
         },
       },
       tooltip: {
-        // custom: (e) => {
-        //   console.log('globalData', globalData);
-        //   console.log('globalData', globalData.lastDateName);
-        //   console.log('e: ', e);
-        //   console.log('this.lastDateName): ', e.w.globals);
-        //   // console.log('this.lastDateName): ', this.lastDateName);
-        //   console.log(e);
-        //   // const seriesLength = e.series[e.seriesIndex].length;
-        //   // const daysBack = seriesLength - e.dataPointIndex - 1;
-        //   const actualDay = '4/2/2020';
-        //   const countryName = e.w.globals.seriesNames[e.seriesIndex];
-        //   return `<div><div style='display:inline-block;border-radius:5px;background-color:${
-        //     e.w.globals.colors[e.seriesIndex]
-        //   };width:10px;height:10px;'></div> ${countryName} on ${actualDay}: ${
-        //     e.series[e.seriesIndex][e.dataPointIndex]
-        //   }</div>`;
-        //   // return `<div>${e.series} ${e.seriesIndex} ${e.dataPointIndex} ${e.w}</div>`;
-        // },
+        onDatasetHover: {
+          highlightDataSeries: false,
+        },
+        shared: false,
+        custom: (e) => {
+          // console.log('globalData', globalData);
+          // console.log('globalData', globalData.lastDateName);
+          // console.log('e: ', e);
+          // console.log('this.lastDateName): ', e.w.globals);
+          // console.log('this.lastDateName): ', this.lastDateName);
+          // console.log(e);
+          const countryName = e.w.globals.seriesNames[e.seriesIndex];
+          let actualDay = '?';
+
+          const seriesLength = e.series[e.seriesIndex].length;
+
+          // this data point is not on this series
+          if (e.dataPointIndex + 1 > seriesLength) {
+            return null;
+          }
+
+          const daysBack = seriesLength - e.dataPointIndex - 1;
+          const date = dateService.parse(globalData.lastDateName);
+          actualDay = dateService.format(dateService.subtract(date, daysBack));
+
+          const value = e.series[e.seriesIndex][e.dataPointIndex];
+
+          return `<div style='padding:6px;'><div style='display:inline-block;border-radius:5px;background-color:${
+            e.w.globals.colors[e.seriesIndex]
+          };width:10px;height:10px;'></div> ${countryName} on ${actualDay}: ${value.toLocaleString()}</div>`;
+        },
         // y: {
         //   formatter: (value) => `${value.toLocaleString()} (more info)`,
         //   title: {
@@ -295,7 +309,12 @@ export default {
     updateChartOptions() {
       console.log('updateChartOptions PRE', this.chartOptions.title.text);
 
-      let yAxisTitle = 'Total Deaths per Country';
+      let label = 'Total';
+      if (this.inputs.showNew) {
+        label = 'Daily';
+      }
+
+      let yAxisTitle = `${label} Deaths per Country`;
       let startText = 'Chronological (by date)';
       if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
         startText = `after having ${this.inputs.firstDayDeathsPerMillionOver} deaths per million`;
@@ -303,19 +322,19 @@ export default {
         startText = `after having ${this.inputs.firstDayDeathsOver} deaths`;
       }
 
-      let title = 'Total Deaths';
+      let title = `${label} Deaths`;
       let subtitle = `${startText}`;
 
       if (this.inputs.scaleToCountryPopulation !== '0') {
         if (this.inputs.scaleToCountryPopulation === '1') {
           // eslint-disable-next-line max-len
           title = 'Deaths per Million: relative to population';
-          yAxisTitle = 'Total Deaths per Million per Country';
+          yAxisTitle = `${label} Deaths per Million per Country`;
         } else {
           const country = this.inputs.scaleToCountryPopulation.name;
           title = `Deaths per country: Simulated as if each country were the size of ${country} (${startText})`;
 
-          yAxisTitle = `SIMULATED: Total Deaths IF each country had the population of ${country}`;
+          yAxisTitle = `SIMULATED: ${label} Deaths IF each country had the population of ${country}`;
 
           subtitle =
             `If you think ${country} is going to follow in the footsteps of a country, ` +
@@ -370,7 +389,7 @@ export default {
           },
         ],
       };
-      console.log('updateChartOptions POST', this.chartOptions.title.text);
+      // console.log('updateChartOptions POST', this.chartOptions.title.text);
     },
     isDataAboveThreshold(population, index, value) {
       if (this.inputs.firstDayMode === firstDayModes.chronological) {
@@ -384,11 +403,11 @@ export default {
           }
         }
       } else if (this.inputs.firstDayMode === firstDayModes.deathsPerMillion) {
-        console.log(
-          'this.inputs.firstDayMode',
-          this.getDeathsPerMillion(value, population),
-          this.inputs.firstDayDeathsPerMillionOver,
-        );
+        // console.log(
+        //   'this.inputs.firstDayMode',
+        //   this.getDeathsPerMillion(value, population),
+        //   this.inputs.firstDayDeathsPerMillionOver,
+        // );
         if (
           this.getDeathsPerMillion(value, population) >= this.inputs.firstDayDeathsPerMillionOver
         ) {
@@ -401,10 +420,10 @@ export default {
       return false;
     },
     updateSeries() {
-      console.log('updateSeries()');
+      // console.log('updateSeries()');
       clearTimeout(window.timersUpdate);
       window.timersUpdate = setTimeout(() => {
-        console.log('updateSeries() IN');
+        // console.log('updateSeries() IN');
 
         this.updateChartOptions();
 
@@ -423,7 +442,7 @@ export default {
             if (this.inputs.scaleToCountryPopulation === '1') {
               scaleMultiplier = this.countries.populations[element.country];
               if (!this.countries.populations[element.country]) {
-                console.log(element.country, this.countries.populations[element.country]);
+                // console.log(element.country, this.countries.populations[element.country]);
               }
             } else {
               scaleMultiplier =
@@ -493,7 +512,7 @@ export default {
       return (deaths / population) * 1000000.0;
     },
     initValues() {
-      this.lastDateName = this.getLastDate();
+      this.lastDateName = dateService.getLastDate();
     },
     initInputs() {
       const params = new URLSearchParams(window.location.search);
@@ -528,18 +547,6 @@ export default {
           this.inputs.scaleToCountryPopulation = params.get('scale');
         }
       }
-    },
-    getLastDate() {
-      // returns '4/1/20'
-      const today = new Date();
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1); // get yesterday
-
-      const day = yesterday.getDate();
-      const month = yesterday.getMonth() + 1;
-      const year = String(yesterday.getFullYear()).substr(-2);
-
-      return `${month}/${day}/${year}`;
     },
   },
   computed: {
