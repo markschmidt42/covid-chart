@@ -138,6 +138,8 @@
       <li>
         <strong>TO-DOs:</strong>
         <ul>
+          <li>Do all the same logic for US States</li>
+          <li>Rather than population, show it in proportion to population density. So more like a deaths per X square miles.</li>
           <li>
             If not Chronological, when a user mouseovers a data point,
             the tooltip will show the date that the data point is for (rather than just days after)
