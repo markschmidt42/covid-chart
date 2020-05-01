@@ -13,6 +13,12 @@
         </div>
 
         <div class="input-container">
+          <label>Show:</label>
+          <select v-model="inputs.showUS">
+            <option :value="false">Countries</option>
+            <option :value="true">US States</option>
+          </select>
+          &nbsp; &nbsp;
           <label>Data Points:</label>
           <select v-model="inputs.showNew">
             <option :value="false">Show Total/Cumulative Deaths</option>
@@ -50,7 +56,7 @@
         </div>
 
         <div class="input-container">
-          <label class="hide-on-small">Scale to Population:</label>
+          <label class="hide-on-small">Scale:</label>
           <span :title="tooltips.scalePopulation">
             <select v-model="inputs.scaleToCountryPopulation">
               <option value="0">Do not scale</option>
@@ -76,7 +82,7 @@
 /* eslint-disable operator-linebreak */
 
 import axios from 'axios';
-import populationContants from '@/constants/populations';
+import populationConstants from '@/constants/populations';
 import dateService from '@/services/date.service';
 
 // https://corona.lmao.ninja/docs/?urls.primaryName=version%202.0.0#/JHUCSSE/get_v2_historical
@@ -88,7 +94,7 @@ const firstDayModes = {
   chronological: 'chronological',
 };
 
-console.log(populationContants.populations);
+console.log(populationConstants.populations);
 
 let globalData = {};
 
@@ -100,6 +106,7 @@ export default {
     lastDateName: '4/1/20',
     refreshDataEveryMiliseconds: 1000 * 60 * 60 * 2, // every 2 hours
     inputs: {
+      showUS: true,
       showNew: false,
       minDeaths: 1000,
       scaleToCountryPopulation: '1',
@@ -117,7 +124,7 @@ export default {
       historical: null,
     },
     countries: {
-      populations: populationContants.populations,
+      populations: populationConstants.populations,
     },
     series: [],
 
